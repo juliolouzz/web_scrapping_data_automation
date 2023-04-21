@@ -1,0 +1,27 @@
+- when you get the request from zillow.com and "make soup out of it" (parse it with BeautifulSoup),
+only the first 9 apartment entries are preloaded in the actual html list code, the rest of the <li> tags are empty
+
+- a full list of apartments (in my case 40 per page) are stored within a <script> tag that looks like this:
+
+<script data-zrr-shared-data-key="mobileSearchPageStore" type="application/json">
+    <!--{"queryState":{"pagination":{},"mapBounds":{"west":-122.56276167822266, ...
+</script>
+(I just copied a part of the first line, as its a very very long and rather unreadable string of text)
+
+- to get hold of a list of the contents of any tag we can use soup.contents, which is further explained in the BeautifulSoup documentation:
+
+https://www.crummy.com/software/BeautifulSoup/bs4/doc/#contents-and-children
+
+- as we don't need the contents in list form, we want to get hold of the first entry within the content list of the specific <script> tag with the "data-zrr-shared-data-key" argument,
+so we tell our soup to select that specific tag and give us the contents that are stored at list index 0
+
+- to do so we use soup.select_one("script[data-zrr-shared-data-key]").contents[0]
+
+- now, we still have this annoying "<!-->" symbols in there in the beginning and end of the string,
+which we want to get rid of before we pass the whole mess into the json loader, so it can properly read and interpret it - and that's exactly what .strip("<!->") is doing
+
+- I still got a warning using the strip method, as PyCharm thinks we are dealing with a PageElement() instead of a string (it still works when I run the code, however),
+which I could get rid of by casting it into a string before using strip, so my line of code looks like this in the end:
+
+data = json.loads(str(soup.select_one("script[data-zrr-shared-data-key]").contents[0]).strip("!<>-"))
+I hope that makes it a bit clearer what's going on there :)
